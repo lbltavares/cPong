@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "vector.h"
 #include "SDL2/SDL.h"
 
 #define WIDTH 740
@@ -13,13 +14,13 @@ SDL_Renderer *renderer = NULL;
 struct _Paddle
 {
     SDL_Rect body;
-    int xspeed, yspeed;
+    vector speed;
 } p1, p2;
 
 struct _Ball
 {
     SDL_Rect body;
-    int xspeed, yspeed;
+    vector speed;
 } ball;
 
 void init();
@@ -61,16 +62,19 @@ void initGameObjects()
     p1.body.y = 0;
     p1.body.w = 30;
     p1.body.h = 70;
+    p1.speed = vec_create(1, 0);
 
     p2.body.x = 300;
     p2.body.y = 300;
     p2.body.w = 30;
     p2.body.h = 70;
+    p2.speed = vec_create(0, 0);
 
     ball.body.x = 300;
     ball.body.y = 200;
     ball.body.w = 50;
     ball.body.h = 50;
+    ball.speed = vec_create(0, 0);
 }
 
 void mainLoop()
@@ -119,7 +123,7 @@ void render()
 
 void update()
 {
-    p1.body.x++;
+    p1.body.x += p1.speed.x;
 }
 
 void quit()
