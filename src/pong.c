@@ -3,7 +3,7 @@
 
 #include "SDL2/SDL.h"
 
-#define WIDTH 640
+#define WIDTH 740
 #define HEIGHT 480
 
 SDL_bool running = SDL_FALSE;
@@ -12,13 +12,13 @@ SDL_Renderer *renderer = NULL;
 
 struct _Paddle
 {
-    int x, y, w, h;
+    SDL_Rect body;
     int xspeed, yspeed;
 } p1, p2;
 
 struct _Ball
 {
-    int x, y, w, h;
+    SDL_Rect body;
     int xspeed, yspeed;
 } ball;
 
@@ -57,14 +57,27 @@ void init()
 
 void initGameObjects()
 {
-    p1.x = 0;
-    p1.y = 0;
-    p1.w = 50;
-    p1.h = 100;
+    p1.body.x = 0;
+    p1.body.y = 0;
+    p1.body.w = 30;
+    p1.body.h = 70;
+
+    p2.body.x = 300;
+    p2.body.y = 300;
+    p2.body.w = 30;
+    p2.body.h = 70;
+
+    ball.body.x = 300;
+    ball.body.y = 200;
+    ball.body.w = 50;
+    ball.body.h = 50;
 }
 
 void mainLoop()
 {
+    long time = SDL_GetTicks();
+    int fps = 30;
+
     running = SDL_TRUE;
     SDL_Event event;
     while (running)
@@ -76,15 +89,37 @@ void mainLoop()
                 running = 0;
             }
         }
+
+        if (time + fps > SDL_GetTicks())
+            continue;
+        time = SDL_GetTicks();
+
+        update();
+        render();
     }
 }
 
 void render()
 {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    // Draw Player 1
+    SDL_RenderFillRect(renderer, &p1.body);
+
+    // Draw Player 2
+    SDL_RenderFillRect(renderer, &p2.body);
+
+    // Draw Ball
+    SDL_RenderFillRect(renderer, &ball.body);
+
+    SDL_RenderPresent(renderer);
 }
 
 void update()
 {
+    p1.body.x++;
 }
 
 void quit()
@@ -97,6 +132,7 @@ void quit()
 int main(int argv, char **args)
 {
     init();
+    initGameObjects();
     mainLoop();
     quit();
 
