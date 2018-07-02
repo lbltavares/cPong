@@ -1,36 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
+#include "define.h"
+#include "game.h"
 #include "vector.h"
 #include "SDL2/SDL.h"
-
-#define WIDTH 740
-#define HEIGHT 480
 
 SDL_bool running = SDL_FALSE;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
-struct _Paddle
-{
-    SDL_Rect body;
-    vector speed;
-} p1, p2;
+const int control_mode = CONTROL_MODE_MOUSE;
 
-struct _Ball
-{
-    SDL_Rect body;
-    vector speed;
-} ball;
-
-void init();
-void initGameObjects();
+void initSDL();
 void mainLoop();
 void render();
 void update();
 void quit();
 
-void init()
+void initSDL()
 {
     if (SDL_Init(SDL_INIT_VIDEO) == -1)
     {
@@ -56,27 +45,6 @@ void init()
     }
 }
 
-void initGameObjects()
-{
-    p1.body.x = 0;
-    p1.body.y = 0;
-    p1.body.w = 30;
-    p1.body.h = 70;
-    p1.speed = vec_create(1, 0);
-
-    p2.body.x = 300;
-    p2.body.y = 300;
-    p2.body.w = 30;
-    p2.body.h = 70;
-    p2.speed = vec_create(0, 0);
-
-    ball.body.x = 300;
-    ball.body.y = 200;
-    ball.body.w = 50;
-    ball.body.h = 50;
-    ball.speed = vec_create(0, 0);
-}
-
 void mainLoop()
 {
     long time = SDL_GetTicks();
@@ -92,6 +60,159 @@ void mainLoop()
             {
                 running = 0;
             }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (control_mode == CONTROL_MODE_KEYBOARD)
+                {
+                    for (int i = 0; i < NUM_PLAYERS; i++)
+                    {
+                        if (players[i].type == TYPE_PADDLE_BOTTOM)
+                        {
+                            if (event.key.keysym.sym == PADDLE_BOTTOM_KEY_LEFT)
+                            {
+                                players[i].speed.x = -PADDLE_SPEED;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_BOTTOM_KEY_RIGHT)
+                            {
+                                players[i].speed.x = PADDLE_SPEED;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_TOP)
+                        {
+                            if (event.key.keysym.sym == PADDLE_TOP_KEY_LEFT)
+                            {
+                                players[i].speed.x = -PADDLE_SPEED;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_TOP_KEY_RIGHT)
+                            {
+                                players[i].speed.x = PADDLE_SPEED;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_LEFT)
+                        {
+                            if (event.key.keysym.sym == PADDLE_LEFT_KEY_UP)
+                            {
+                                players[i].speed.y = -PADDLE_SPEED;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_LEFT_KEY_DOWN)
+                            {
+                                players[i].speed.y = PADDLE_SPEED;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_RIGHT)
+                        {
+                            if (event.key.keysym.sym == PADDLE_RIGHT_KEY_UP)
+                            {
+                                players[i].speed.y = -PADDLE_SPEED;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_RIGHT_KEY_DOWN)
+                            {
+                                players[i].speed.y = PADDLE_SPEED;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (event.type == SDL_KEYUP)
+            {
+                if (control_mode == CONTROL_MODE_KEYBOARD)
+                {
+                    for (int i = 0; i < NUM_PLAYERS; i++)
+                    {
+                        if (players[i].type == TYPE_PADDLE_BOTTOM)
+                        {
+                            if (event.key.keysym.sym == PADDLE_BOTTOM_KEY_LEFT)
+                            {
+                                players[i].speed.x = 0;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_BOTTOM_KEY_RIGHT)
+                            {
+                                players[i].speed.x = 0;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_TOP)
+                        {
+                            if (event.key.keysym.sym == PADDLE_TOP_KEY_LEFT)
+                            {
+                                players[i].speed.x = 0;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_TOP_KEY_RIGHT)
+                            {
+                                players[i].speed.x = 0;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_LEFT)
+                        {
+                            if (event.key.keysym.sym == PADDLE_LEFT_KEY_UP)
+                            {
+                                players[i].speed.y = 0;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_LEFT_KEY_DOWN)
+                            {
+                                players[i].speed.y = 0;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_RIGHT)
+                        {
+                            if (event.key.keysym.sym == PADDLE_RIGHT_KEY_UP)
+                            {
+                                players[i].speed.y = 0;
+                            }
+                            else if (event.key.keysym.sym == PADDLE_RIGHT_KEY_DOWN)
+                            {
+                                players[i].speed.y = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (event.type == SDL_MOUSEMOTION)
+            {
+                if (control_mode == CONTROL_MODE_MOUSE)
+                {
+                    int mx = event.motion.x;
+                    int my = event.motion.y;
+                    for (int i = 0; i < NUM_PLAYERS; i++)
+                    {
+                        if (players[i].type == TYPE_PADDLE_BOTTOM || players[i].type == TYPE_PADDLE_TOP)
+                        {
+                            if (abs(my - players[i].position.y) < MOUSE_RANGE)
+                            {
+                                if (players[i].position.x + players[i].w / 2 < mx)
+                                {
+                                    players[i].speed.x = PADDLE_SPEED;
+                                }
+                                else
+                                {
+                                    players[i].speed.x = -PADDLE_SPEED;
+                                }
+                            }
+                            else
+                            {
+                                players[i].speed.x = 0;
+                            }
+                        }
+                        else if (players[i].type == TYPE_PADDLE_LEFT || players[i].type == TYPE_PADDLE_RIGHT)
+                        {
+                            if (abs(mx - players[i].position.x) < MOUSE_RANGE)
+                            {
+                                if (players[i].position.y + players[i].h / 2 < my)
+                                {
+                                    players[i].speed.y = PADDLE_SPEED;
+                                }
+                                else
+                                {
+                                    players[i].speed.y = -PADDLE_SPEED;
+                                }
+                            }
+                            else
+                            {
+                                players[i].speed.y = 0;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         if (time + fps > SDL_GetTicks())
@@ -105,25 +226,41 @@ void mainLoop()
 
 void render()
 {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    // Draw Player 1
-    SDL_RenderFillRect(renderer, &p1.body);
+    SDL_Rect rect;
 
-    // Draw Player 2
-    SDL_RenderFillRect(renderer, &p2.body);
+    // Draw Players
+    for (int i = 0; i < NUM_PLAYERS; i++)
+    {
+        rect = createRect(&players[i]);
+        SDL_RenderFillRect(renderer, &rect);
+    }
 
     // Draw Ball
-    SDL_RenderFillRect(renderer, &ball.body);
+    rect = createRect(&ball);
+    SDL_RenderFillRect(renderer, &rect);
 
     SDL_RenderPresent(renderer);
 }
 
 void update()
 {
-    p1.body.x += p1.speed.x;
+    // Update Players
+    for (int i = 0; i < NUM_PLAYERS; i++)
+    {
+        vec_sum(&players[i].position, players[i].speed);
+        updatePlayer(&players[i]);
+    }
+
+    // Update Ball
+    vec_sum(&ball.position, ball.speed);
+    updateBall();
+
+    // Update Score
+    updateScore();
 }
 
 void quit()
@@ -135,8 +272,10 @@ void quit()
 
 int main(int argv, char **args)
 {
-    init();
-    initGameObjects();
+    srand(time(NULL));
+
+    initSDL();
+    initGame();
     mainLoop();
     quit();
 
